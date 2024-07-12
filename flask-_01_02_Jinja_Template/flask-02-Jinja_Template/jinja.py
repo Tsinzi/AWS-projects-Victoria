@@ -8,10 +8,7 @@ def number():
      num1 = 12
      num2 = 11
      return render_template("body.html", value1 = num1, value2 = num2, a = num1+num2)
-def num():
-     num1 = 12
-     num2 = 11
-     return render_template("body.html", value1 = num1, value2 = num2, b = num1*num2)
+
 if __name__== "__main__":
-     # app.run(debug=True, port=30000)
-     app.run(host= '0.0.0.0', port=8080)
+     #app.run(debug=True, port=30000)
+     app.run(host= '0.0.0.0', port=8081)
