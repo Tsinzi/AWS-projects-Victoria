@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  CloudFormation Template for Roman Numerals Converter Application.
+  This template creates Python Flask Web Application on Amazon Linux 2023
+  EC2 Instance with custom security group allowing http connections on port 80 and SSH connection on port 22.
+  Roman Numerals Converter Application is downloaded from Github repository, then installed on Flask.
+Parameters:
+  keyName:
+    Description: Enter your KeyPair
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: Tsinzi2
+  LatestAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
+
+Resources:
+  ConverterSecGrp:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH and HTTP # Required
+      SecurityGroupIngress: 
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          IpProtocol: tcp
+          ToPort: 22
+
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+
+  ConverterInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: t2.micro
+      KeyName: !Ref keyName
+      SecurityGroupIds: 
+        !Ref ConverterSecGrp
+      UserData: !Base64 |
+        #! /bin/bash
+        dnf update -y
+        dnf install python3 -y
+        dnf install python3-pip -y
+        pip3 install flask
+        dnf install git -y
+        FOLDER="https://raw.githubusercontent.com/Tsinzi/AWS-projects-Victoria/main/Project-001-roman-numerals-converter/templates/index.html"
+        cd /home/ec2-user
+        wget -P templates ${FOLDER}/index.html
+        wget -P templates ${FOLDER}/result.html
+        wget https://raw.githubusercontent.com/Tsinzi/AWS-projects-Victoria/main/Project-001-roman-numerals-converter/app.py
+        python3 app.py
+      Tags:
+       - Key: Name
+          Value : !Sub Web Server of ${AWS::StackName}
+Outputs:
+  WebSiteURL:
+    Value: !Sub 
+      - http://${WebSiteURL}
+      - WebSiteURL: !GetAtt ConverterInstance.PublicDnsName
